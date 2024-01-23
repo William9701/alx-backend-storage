@@ -1,9 +1,8 @@
--- Create stored procedure ComputeAverageWeightedScoreForUsers
-DELIMITER //
+-- this sql querry  creates a stored procedure ComputeAverageWeightedScoreForUsers that computes and store the average weighted score for all students.
+DELIMITER $$
 
 CREATE PROCEDURE ComputeAverageWeightedScoreForUsers()
 BEGIN
-    -- Update users' average_score
     UPDATE users
     SET average_score = (
         SELECT IFNULL(SUM(corrections.score * projects.weight) / SUM(projects.weight), 0)
@@ -11,6 +10,6 @@ BEGIN
         LEFT JOIN projects ON corrections.project_id = projects.id
         WHERE corrections.user_id = users.id
     );
-END //
+END $$
 
 DELIMITER ;
