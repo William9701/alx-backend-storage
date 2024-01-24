@@ -71,7 +71,7 @@ class Cache:
     @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """
-        Generates a random key, stores the input data in Redis using the key
+        Generates a random key, stores the input data in Redis using the y
         and returns the key.
         """
         key = str(uuid.uuid4())
