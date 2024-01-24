@@ -42,6 +42,18 @@ def parse_line(line: str, total_size: int, status_codes: dict) -> tuple:
         return total_size, status_codes
 
 
+def count_calls(method: Callable) -> Callable:
+    """ the caount_calls method"""
+    key = method.__qualname__
+
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        self._redis.incr(key)
+        return method(self, *args, **kwargs)
+
+    return wrapper
+
+
 class Cache:
     """
     Class cache for data storing
