@@ -1,36 +1,42 @@
-import requests
+#!/usr/bin/env python3
+"""
+Caching request module
+"""
 import redis
-from typing import Callable
+import requests
 from functools import wraps
-
-# Create a Redis client instance
-r = redis.Redis()
+from typing import Callable
 
 
-def count_url_calls(func: Callable) -> Callable:
-    """Decorator to count the number of times a URL is accessed."""
+def track_and_cache_page(fn: Callable) -> Callable:
+    """ Decorator for caching and tracking page
+    """
 
-    @wraps(func)
+    @wraps(fn)
     def wrapper(url: str) -> str:
-        """Wrapper function for decorator."""
-        # Increment the count for the URL
-        r.incr(f"count:{url}")
-        return func(url)
+        """ Wrapper checks Start in a new file named web.py and do not
+        reuse the code written in"""
+        redis_client = redis.Redis()
+        redis_key_count = f'count:{url}'
+        redis_key_page = f'{url}'
+
+        redis_client.incr(redis_key_count)
+        cached_page = redis_client.get(redis_key_page)
+
+        if cached_page:
+            return cached_page.decode('utf-8')
+
+        response = fn(url)
+        redis_client.setex(redis_key_page, 10, response)
+
+        return response
 
     return wrapper
 
 
-@count_url_calls
+@track_and_cache_page
 def get_page(url: str) -> str:
-    """Function to get the HTML content of a URL."""
-    # Check if the URL is in the cache
-    if (cached_page := r.get(url)) is not None:
-        return cached_page.decode('utf-8')
-
-    # Get the HTML content of the URL
-    page = requests.get(url).text
-
-    # Cache the result with an expiration time of 10 seconds
-    r.setex(url, 10, page)
-
-    return page
+    """ Makes an HTTP request to a given a specific endpoint
+    """
+    response = requests.get(url)
+    return response.text
